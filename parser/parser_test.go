@@ -156,7 +156,6 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	}
 }
 
-
 func TestParsingInfixExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
@@ -194,7 +193,6 @@ func TestParsingInfixExpressions(t *testing.T) {
 		}
 	}
 }
-
 
 func TestOperatorPrecedenceParsing(t *testing.T) {
 	tests := []struct {
@@ -309,7 +307,6 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
-
 func createParseProgram(input string, t *testing.T) *ast.Program {
 	l := lexer.New(input)
 	p := New(l)
@@ -333,7 +330,6 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	}
 	t.FailNow()
 }
-
 
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
@@ -367,6 +363,10 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, expected interface{
 	switch v := expected.(type) {
 	case int:
 		return testIntegerLiteral(t, exp, int64(v))
+	case int64:
+		return testIntegerLiteral(t, exp, v)
+	case string:
+		return testIdentifier(t, exp, v)
 	}
 
 	t.Errorf("type of exp not handled. got=%T", exp)
@@ -400,7 +400,6 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{}, ope
 		return false
 	}
 
-
 	if !testLiteralExpression(t, opExp.Left, left) {
 		return false
 	}
@@ -411,6 +410,26 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{}, ope
 	}
 
 	if !testLiteralExpression(t, opExp.Right, right) {
+		return false
+	}
+
+	return true
+}
+
+func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
+	identifier, ok := exp.(*ast.Identifier)
+	if !ok {
+		t.Errorf("exp not %T. got=%T", &ast.Identifier{}, exp)
+		return false
+	}
+
+	if identifier.Value != value {
+		t.Errorf("identifier.Value not %s. got=%s", value, identifier.Value)
+		return false
+	}
+
+	if identifier.TokenLiteral() != value {
+		t.Errorf("identifiner.TokenLiteral not %s. got=%s", value, identifier.TokenLiteral())
 		return false
 	}
 
