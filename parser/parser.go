@@ -38,19 +38,18 @@ const (
 )
 
 // 우선순위 테이블
-var precedences = map[token.TokenType]int {
-	token.EQUAL: EQUALS,
-	token.NOT_EQUAL: EQUALS,
-	token.LESSTHAN: LESSGREATER,
+var precedences = map[token.TokenType]int{
+	token.EQUAL:       EQUALS,
+	token.NOT_EQUAL:   EQUALS,
+	token.LESSTHAN:    LESSGREATER,
 	token.GREATERTHAN: LESSGREATER,
-	token.PLUS: SUM,
-	token.MINUS: SUM,
-	token.SLASH: PRODUCT,
-	token.ASTERISK: PRODUCT,
-	token.LEFTPAREN: CALL,
+	token.PLUS:        SUM,
+	token.MINUS:       SUM,
+	token.SLASH:       PRODUCT,
+	token.ASTERISK:    PRODUCT,
+	token.LEFTPAREN:   CALL,
 	token.LEFTBRACKET: INDEX,
 }
-
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
@@ -201,7 +200,7 @@ func (p *Parser) parseIntergerLiteral() ast.Expression {
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	expression := &ast.PrefixExpression{
-		Token: p.curToken,
+		Token:    p.curToken,
 		Operator: p.curToken.Literal,
 	}
 
@@ -214,9 +213,9 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression := &ast.InfixExpression{
-		Token: p.curToken,
+		Token:    p.curToken,
 		Operator: p.curToken.Literal,
-		Left: left,
+		Left:     left,
 	}
 
 	precedence := p.curPrecedence()
