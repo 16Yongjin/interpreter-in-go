@@ -62,6 +62,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntergerLiteral)
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.TRUE, p.parserBoolean)
+	p.registerPrefix(token.FALSE, p.parserBoolean)
 
 	// 중위 연산자 파싱함수 등록
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -223,6 +225,10 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
+}
+
+func (p *Parser) parserBoolean() ast.Expression {
+	return &ast.Boolean{ Token: p.curToken, Value: p.curTokenIs(token.TRUE) }
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
