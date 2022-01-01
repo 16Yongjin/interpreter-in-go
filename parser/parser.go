@@ -64,6 +64,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.TRUE, p.parserBoolean)
 	p.registerPrefix(token.FALSE, p.parserBoolean)
+	p.registerPrefix(token.LEFTPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfStatement)
 
 	// 중위 연산자 파싱함수 등록
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -231,6 +233,70 @@ func (p *Parser) parserBoolean() ast.Expression {
 	return &ast.Boolean{ Token: p.curToken, Value: p.curTokenIs(token.TRUE) }
 }
 
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	p.nextToken()
+
+	exp := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RIGHTPAREN) {
+		return nil
+	}
+
+	return exp
+}
+
+func (p *Parser) parseIfStatement() ast.Expression {
+	expression := &ast.IfExpression{Token: p.curToken}
+
+	if !p.expectPeek(token.LEFTPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+
+	expression.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RIGHTPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.LEFTBRACE) {
+		return nil
+	}
+
+	expression.Consequence = p.parseBlockStatement()
+
+	// ELSE 파싱
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+
+		if !p.expectPeek(token.LEFTBRACE) {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
+
+	return expression
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{ Token: p.curToken }
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RIGHTBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			block.Statements = append(block.Statements, stmt)
+		}
+		p.nextToken()
+	}
+
+	return block
+}
+
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
 }
@@ -272,6 +338,7 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 // 전위 연산자 파싱함수가 없으면 에러 메시지 추가
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	fmt.Printf("cur: %s / next: %s", p.curToken.Literal, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
