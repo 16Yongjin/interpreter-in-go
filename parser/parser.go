@@ -66,6 +66,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parserBoolean)
 	p.registerPrefix(token.LEFTPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfStatement)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
 	// 중위 연산자 파싱함수 등록
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -230,7 +231,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 }
 
 func (p *Parser) parserBoolean() ast.Expression {
-	return &ast.Boolean{ Token: p.curToken, Value: p.curTokenIs(token.TRUE) }
+	return &ast.Boolean{Token: p.curToken, Value: p.curTokenIs(token.TRUE)}
 }
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
@@ -281,7 +282,7 @@ func (p *Parser) parseIfStatement() ast.Expression {
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
-	block := &ast.BlockStatement{ Token: p.curToken }
+	block := &ast.BlockStatement{Token: p.curToken}
 	block.Statements = []ast.Statement{}
 
 	p.nextToken()
@@ -295,6 +296,51 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	literal := &ast.FunctionLiteral{Token: p.curToken}
+
+	if !p.expectPeek(token.LEFTPAREN) {
+		return nil
+	}
+
+	literal.Parameters = p.parseFunctionParameters()
+
+	if !p.expectPeek(token.LEFTBRACE) {
+		return nil
+	}
+
+	literal.Body = p.parseBlockStatement()
+
+	return literal
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifiers := []*ast.Identifier{}
+
+	if p.peekTokenIs(token.RIGHTPAREN) {
+		p.nextToken()
+		return identifiers
+	}
+
+	p.nextToken()
+
+	identifier := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	identifiers = append(identifiers, identifier)
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		identifier := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		identifiers = append(identifiers, identifier)
+	}
+
+	if !p.expectPeek(token.RIGHTPAREN) {
+		return nil
+	}
+
+	return identifiers
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -338,7 +384,6 @@ func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
 // 전위 연산자 파싱함수가 없으면 에러 메시지 추가
 func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 	msg := fmt.Sprintf("no prefix parse function for %s found", t)
-	fmt.Printf("cur: %s / next: %s", p.curToken.Literal, p.peekToken.Literal)
 	p.errors = append(p.errors, msg)
 }
 
