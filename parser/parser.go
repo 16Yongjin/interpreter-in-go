@@ -78,6 +78,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQUAL, p.parseInfixExpression)
 	p.registerInfix(token.LESSTHAN, p.parseInfixExpression)
 	p.registerInfix(token.GREATERTHAN, p.parseInfixExpression)
+	p.registerInfix(token.LEFTPAREN, p.parseCallExpression)
 
 	return p
 }
@@ -314,6 +315,37 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	literal.Body = p.parseBlockStatement()
 
 	return literal
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+	return exp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.peekTokenIs(token.RIGHTPAREN) {
+		p.nextToken()
+		return args
+	}
+
+	p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RIGHTPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {
