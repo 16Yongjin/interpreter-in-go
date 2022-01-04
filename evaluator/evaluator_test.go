@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
@@ -140,6 +141,65 @@ func testEval(input string) object.Object {
 	p := parser.New(l)
 	program := p.ParseProgram()
 	return Eval(program)
+}
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{
+			"5 + true;",
+			fmt.Sprintf("%s: %s + %s", TYPE_MISSMATCH_ERROR, object.INTEGER_OBJ, object.BOOLEAN_OBJ)},
+		{
+			"5 + true; 5;",
+			fmt.Sprintf("%s: %s + %s", TYPE_MISSMATCH_ERROR, object.INTEGER_OBJ, object.BOOLEAN_OBJ)},
+		{
+			"-true",
+			fmt.Sprintf("%s: -%s", UNKNOWN_OPERATOR_ERROR, object.BOOLEAN_OBJ)},
+		{
+			"true + false",
+			fmt.Sprintf("%s: %s + %s", UNKNOWN_OPERATOR_ERROR, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{
+			"5; true + false; 5",
+			fmt.Sprintf("%s: %s + %s", UNKNOWN_OPERATOR_ERROR, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{
+			"if (10 > 1) { true + false; }",
+			fmt.Sprintf("%s: %s + %s", UNKNOWN_OPERATOR_ERROR, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ)},
+		{`
+			if (10 > 1) {
+				if (10 > 1) {
+					return true + false;
+				}
+			}
+		`, fmt.Sprintf("%s: %s + %s", UNKNOWN_OPERATOR_ERROR, object.BOOLEAN_OBJ, object.BOOLEAN_OBJ),
+		},
+		// {
+		// 	"foobar",
+		// 	fmt.Sprintf("%s: %s", IDENTIFIER_NOT_FOUND_ERROR, "foobar")},
+		// {
+		// 	`"Hello" - "World"`,
+		// 	fmt.Sprintf("%s: %s - %s", UNKNOWN_OPERATOR_ERROR, object.STRING_OBJ, object.STRING_OBJ),
+		// },
+		// {
+		// 	`{"name": "Monky"}[fn(x) { x }];`,
+		// 	fmt.Sprintf("unusable as hash key: %s", object.FUNCTION_OBJ),
+		// },
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned. got=%T (%+v)", evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("wrong error message. expected=%q, got=%q", tt.expectedMessage, errObj.Message)
+		}
+	}
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
