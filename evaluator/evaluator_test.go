@@ -171,10 +171,10 @@ func TestErrorHandling(t *testing.T) {
 			"foobar",
 			fmt.Sprintf("%s: %s", IDENTIFIER_NOT_FOUND_ERROR, "foobar"),
 		},
-		// {
-		// 	`"Hello" - "World"`,
-		// 	fmt.Sprintf("%s: %s - %s", UNKNOWN_OPERATOR_ERROR, object.STRING_OBJ, object.STRING_OBJ),
-		// },
+		{
+			`"Hello" - "World"`,
+			fmt.Sprintf("%s: %s - %s", UNKNOWN_OPERATOR_ERROR, object.STRING_OBJ, object.STRING_OBJ),
+		},
 		// {
 		// 	`{"name": "Monky"}[fn(x) { x }];`,
 		// 	fmt.Sprintf("unusable as hash key: %s", object.FUNCTION_OBJ),
@@ -264,6 +264,20 @@ func TestStringLiteral(t *testing.T) {
 
 	if str.Value != "Hello World!" {
 		t.Errorf("String has wrong value. got%q", str.Value)
+	}
+}
+
+func TestStringConcatenation(t *testing.T) {
+	input := `"Hello" + " " + "World!"`
+
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("object is not String. got=%T (%+v)", evaluated, evaluated)
+	}
+
+	if str.Value != "Hello World!" {
+		t.Errorf("String has wrong value. got=%q", str.Value)
 	}
 }
 
