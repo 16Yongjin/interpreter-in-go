@@ -281,6 +281,71 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`len("")`, 0},
+		{`len("four")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, fmt.Sprintf("argument to %q not supported, got %s", BUILTIN_FUNC_NAME_LEN, object.INTEGER_OBJ)},
+		{`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
+		// {`first([1, 2, 3])`, 1},
+		// {`first([])`, nil},
+		// {`first(1)`, fmt.Sprintf("argument to %q must be %s, got %s", object.BuiltinFuncNameFirst, object.ArrayObj, object.IntegerObj)},
+		// {`first(1, 2)`, "wrong number of arguments. got=2, want=1"},
+		// {`last([1, 2, 3])`, 3},
+		// {`last([])`, nil},
+		// {`last(1)`, fmt.Sprintf("argument to %q must be %s, got %s", object.BuiltinFuncNameLast, object.ArrayObj, object.IntegerObj)},
+		// {`last(1, 2)`, "wrong number of arguments. got=2, want=1"},
+		// {`rest([1, 2, 3])`, []int{2, 3}},
+		// {`rest([])`, nil},
+		// {`rest(1)`, fmt.Sprintf("argument to %q must be %s, got %s", object.BuiltinFuncNameRest, object.ArrayObj, object.IntegerObj)},
+		// {`rest(1, 2)`, "wrong number of arguments. got=2, want=1"},
+		// {`push([], 1)`, []int{1}},
+		// {`push(1, 2)`, fmt.Sprintf("argument to %q must be %s, got %s", object.BuiltinFuncNamePush, object.ArrayObj, object.IntegerObj)},
+		// {`push(1)`, "wrong number of arguments. got=1, want=2"},
+		// {`puts("hello", "world!")`, nil},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case nil:
+			testNullObject(t, evaluated)
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+				continue
+			}
+
+			if errObj.Message != expected {
+				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Message)
+			}
+			// case []int:
+			// 	array, ok := evaluated.(*object.ARRAY)
+			// 	if !ok {
+			// 		t.Errorf("obj not %s. got=%T (%+v)", object.ARRAY_OBJ, evaluated, evaluated)
+			// 		continue
+			// 	}
+			// 	if len(array.Elements) != len(expected) {
+			// 		t.Errorf("wrong num of elements. want=%d, got=%d",
+			// 			len(expected), len(array.Elements))
+			// 		continue
+			// 	}
+
+			// 	for i, element := range expected {
+			// 		testIntegerObject(t, array.Elements[i], int64(element))
+			// 	}
+		}
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
