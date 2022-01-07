@@ -422,6 +422,38 @@ func TestArrayIndexExpressions(t *testing.T) {
 	}
 }
 
+func TestArrayBuiltins(t *testing.T) {
+	input := `
+	let reduce = fn(arr, init, f) {
+		let iter = fn(arr, result) {
+			if (len(arr) == 0) {
+				result
+			} else {
+				iter(rest(arr), f(result, first(arr)));
+			}
+		};
+
+		iter(arr, init);
+	};
+	
+	let add = fn(a, b) { a + b };
+	
+	let sum = fn(arr) {
+  	reduce(arr, 0, add);
+	};
+
+	sum([1, 2, 3, 4, 5]);
+`
+
+	evaluated := testEval(input)
+	result, ok := evaluated.(*object.Integer)
+	if !ok {
+		t.Fatalf("object is not %T. got=%T (%+v)", object.Integer{}, evaluated, evaluated)
+	}
+
+	testIntegerObject(t, result, 15)
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
