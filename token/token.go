@@ -14,7 +14,7 @@ const (
 	// 식별자 + 리터럴
 	IDENTIFIER = "IDENT"
 	INT        = "INT"
-	STRING = "STRING"
+	STRING     = "STRING"
 
 	// 연산자
 	ASSIGN      = "="
@@ -26,18 +26,18 @@ const (
 	LESSTHAN    = "<"
 	GREATERTHAN = ">"
 
-	EQUAL    = "=="
+	EQUAL     = "=="
 	NOT_EQUAL = "!="
 
 	// 구분자
 	COMMA     = ","
 	SEMICOLON = ";"
-	COLON = ":"
+	COLON     = ":"
 
-	LEFTPAREN  = "("
-	RIGHTPAREN = ")"
-	LEFTBRACE  = "{"
-	RIGHTBRACE = "}"
+	LEFTPAREN    = "("
+	RIGHTPAREN   = ")"
+	LEFTBRACE    = "{"
+	RIGHTBRACE   = "}"
 	LEFTBRACKET  = "["
 	RIGHTBRACKET = "]"
 
