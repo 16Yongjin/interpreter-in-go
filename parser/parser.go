@@ -69,6 +69,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LEFTBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.LEFTBRACE, p.parseHashLiteral)
 
 	// 중위 연산자 파싱함수 등록
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -403,6 +404,35 @@ func (p *Parser) parserIndexExpression(left ast.Expression) ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *Parser) parseHashLiteral() ast.Expression {
+	hash := &ast.HashLiteral{Token: p.curToken}
+	hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for !p.peekTokenIs(token.RIGHTBRACE) {
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+
+		p.nextToken()
+		value := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = value
+
+		if !p.peekTokenIs(token.RIGHTBRACE) && !p.expectPeek(token.COMMA) {
+			return nil
+		}
+	}
+
+	if !p.expectPeek(token.RIGHTBRACE) {
+		return nil
+	}
+
+	return hash
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
