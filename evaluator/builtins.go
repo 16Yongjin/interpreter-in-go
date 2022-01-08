@@ -58,7 +58,7 @@ var builtins = map[string]*object.Builtin{
 
 			array := args[0].(*object.Array)
 			length := len(array.Elements)
-			if length >= 0 {
+			if length > 0 {
 				return array.Elements[length-1]
 			}
 
@@ -77,7 +77,7 @@ var builtins = map[string]*object.Builtin{
 
 			array := args[0].(*object.Array)
 			length := len(array.Elements)
-			if length >= 1 {
+			if length > 0 {
 				newElements := make([]object.Object, length-1)
 				copy(newElements, array.Elements[1:length])
 				return &object.Array{Elements: newElements}
