@@ -306,7 +306,7 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`push([], 1)`, []int{1}},
 		{`push(1, 2)`, fmt.Sprintf("argument to %q must be %s, got %s", BUILTIN_FUNC_NAME_PUSH, object.ARRAY_OBJ, object.INTEGER_OBJ)},
 		{`push(1)`, "wrong number of arguments. got=1, want=2"},
-		// {`puts("hello", "world!")`, nil},
+		{`puts("hello", "world!")`, nil},
 	}
 
 	for _, tt := range tests {
